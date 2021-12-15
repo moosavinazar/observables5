@@ -2,6 +2,7 @@ import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {User} from "./models/app-model";
 import {concatMap, delay, filter, from, fromEvent, map, of, tap} from "rxjs";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
+import {UsersService} from "./services/users.service";
 
 @Component({
   selector: 'app-root',
@@ -12,7 +13,7 @@ export class AppComponent implements OnInit {
 
   @ViewChild('input', {static: true}) input!: ElementRef;
 
-  constructor(private http: HttpClient ) {
+  constructor( private http: HttpClient, private userService: UsersService) {
   }
 
   users: User[] = [
@@ -43,7 +44,7 @@ export class AppComponent implements OnInit {
     fromEvent(this.input.nativeElement, 'input').pipe(
       map(event => event as InputEvent),
       map( item => (item.target as HTMLInputElement).value ),
-      concatMap(item => this.changeBodyPost(item)),
+      concatMap(item => this.userService.patchBodyPost(item)),
       tap( i => console.log(i) )
     ).subscribe();
 
@@ -63,18 +64,6 @@ export class AppComponent implements OnInit {
     from(this.users).pipe(
       filter(user => user.age < 35 && user.status === 'active')
     ).subscribe(console.log);*/
-  }
-
-  public changeBodyPost(val: string) {
-    let body = JSON.stringify({
-      body: val
-    });
-    let headers = new HttpHeaders({'Content-Type': 'application/json; charset=UTF-8'});
-    let options = { headers: headers }
-
-    return this.http.patch(`https://jsonplaceholder.typicode.com/posts/1`, body, options).pipe(
-      delay(2000)
-    );
   }
 
 }
