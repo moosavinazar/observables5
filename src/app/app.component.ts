@@ -1,6 +1,6 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {User} from "./models/app-model";
-import {filter, from, of} from "rxjs";
+import {delay, filter, from, fromEvent, map, of, tap} from "rxjs";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 
 @Component({
@@ -9,6 +9,8 @@ import {HttpClient, HttpHeaders} from "@angular/common/http";
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
+
+  @ViewChild('input', {static: true}) input!: ElementRef;
 
   constructor(private http: HttpClient ) {
   }
@@ -38,7 +40,24 @@ export class AppComponent implements OnInit {
 
   public ngOnInit() {
 
-    of(1, 2,3, 4, 5, 6, 7, 8, 9).subscribe(val => {
+    fromEvent(this.input.nativeElement, 'input').pipe(
+      map(event => event as InputEvent),
+      map( item => (item.target as HTMLInputElement).value ),
+      tap( i => console.log(i) )
+    ).subscribe( val => {
+      let body = JSON.stringify({
+        body: val
+      });
+      let headers = new HttpHeaders({'Content-Type': 'application/json; charset=UTF-8'});
+      let options = { headers: headers }
+
+      this.http.patch(`https://jsonplaceholder.typicode.com/posts/${ val }`, body, options).pipe(
+        delay(2000)
+      ).subscribe(console.log);
+
+    });
+
+    /*of(1, 2,3, 4, 5, 6, 7, 8, 9).subscribe(val => {
 
       let body = JSON.stringify({
         body: 'Test123',
@@ -53,7 +72,7 @@ export class AppComponent implements OnInit {
 
     from(this.users).pipe(
       filter(user => user.age < 35 && user.status === 'active')
-    ).subscribe(console.log);
+    ).subscribe(console.log);*/
   }
 
 }
